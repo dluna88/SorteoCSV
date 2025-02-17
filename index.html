@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteo con CSV</title>
+    <script src="lottie.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f4f4f4; }
+        h1 { color: #333; font-size: 28px; margin-bottom: 20px; }
+        button { font-size: 16px; padding: 10px; margin: 10px; }
+        #confeti { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; display: none; }
+    </style>
+</head>
+<body>
+
+    <h1 id="ganador">Cargando participantes...</h1>
+    <button onclick="sortearGanador()">Sortear</button>
+
+    <div id="confeti"></div>
+
+    <script>
+        let participantes = [];
+
+        // Cargar CSV automáticamente al cargar la página
+        window.onload = function () {
+            cargarCSV();
+        };
+
+        // Animación de confeti
+        const confetiAnim = lottie.loadAnimation({
+            container: document.getElementById("confeti"),
+            renderer: "svg",
+            loop: true, // Aseguramos que la animación sea en bucle
+            autoplay: false, // No se reproduce automáticamente hasta que se active
+            path: "confeti.json"
+        });
+
+        function cargarCSV() {
+            fetch("participantes.csv")
+                .then(response => response.text())
+                .then(texto => {
+                    participantes = texto.split("\n").map(nombre => nombre.trim()).filter(nombre => nombre);
+                    document.getElementById("ganador").textContent = "¡Haz clic en sortear!";
+                })
+                .catch(error => {
+                    console.error("Error al cargar el CSV:", error);
+                    document.getElementById("ganador").textContent = "Error al cargar participantes.";
+                });
+        }
+
+        function sortearGanador() {
+            if (participantes.length === 0) {
+                alert("No hay participantes cargados.");
+                return;
+            }
+
+            document.getElementById("confeti").style.display = "none"; // Ocultar confeti antes de comenzar
+
+            let contador = 0;
+            const cambiosTotales = 40;
+            const velocidadCambio = 50;
+
+            let intervalo = setInterval(() => {
+                const indiceAleatorio = Math.floor(Math.random() * participantes.length);
+                document.getElementById("ganador").textContent = `🎲 ${participantes[indiceAleatorio]}`;
+                contador++;
+
+                if (contador > cambiosTotales) { 
+                    clearInterval(intervalo);
+                    setTimeout(() => {
+                        const indiceFinal = Math.floor(Math.random() * participantes.length);
+                        document.getElementById("ganador").textContent = `🎉 ¡El ganador es: ${participantes[indiceFinal]}! 🎉`;
+
+                        // Mostrar y reproducir animación de confeti
+                        document.getElementById("confeti").style.display = "block";
+                        confetiAnim.play(); // Reproducir la animación
+
+                        // setTimeout(() => {
+                        //     confetiAnim.stop(); // Detener la animación después de 5 segundos
+                        //     document.getElementById("confeti").style.display = "none";
+                        // }, 5000);
+                    }, 500);
+                }
+            }, velocidadCambio);
+        }
+    </script>
+
+</body>
+</html>
